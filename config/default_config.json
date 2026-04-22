@@ -1,0 +1,47 @@
+{
+  "startup": {
+    "run_on_boot": false,
+    "close_behavior": "minimize"
+  },
+  "capture": {
+    "copy_to_clipboard": true,
+    "guideline_color": "#FF5555",
+    "guideline_thickness": 1,
+    "use_printscreen": true,
+    "printscreen_action": "region",
+    "show_magnifier": true,
+    "esc_behavior": "tray"
+  },
+  "save": {
+    "directory": "~/Downloads",
+    "format": "png",
+    "quality": 95,
+    "filename_pattern": "nabi_{yyyy}{MM}{dd}_{HH}{mm}{ss}"
+  },
+  "hotkeys": {
+    "region": "ctrl+shift+a",
+    "window": "ctrl+shift+w",
+    "monitor": "ctrl+shift+m",
+    "fullscreen": "ctrl+shift+f",
+    "fixed_size": "ctrl+shift+x",
+    "last_repeat": "ctrl+shift+r"
+  },
+  "editor": {
+    "colors": [
+      "#000000", "#FFFFFF", "#FF1744", "#00C853",
+      "#2962FF", "#FFD600", "#D500F9", "#00B8D4",
+      "#FF6D00", "#6200EA", "#5D4037", "#757575"
+    ],
+    "pen_widths": [1, 3, 5, 8, 12],
+    "default_pen_width": 3,
+    "highlighter_opacity": 0.35,
+    "highlighter_width": 18,
+    "shapes": ["rectangle", "ellipse", "arrow", "line", "speech_bubble"],
+    "mosaic_block_sizes": [5, 10, 15, 20, 30],
+    "default_mosaic_block_size": 10,
+    "default_font_family": "Segoe UI",
+    "default_font_size": 16,
+    "history_max_items": 50,
+    "thumbnail_size": 96
+  }
+}

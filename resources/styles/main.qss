@@ -1,0 +1,232 @@
+/* NabiCapture main stylesheet */
+
+QMainWindow, QDialog {
+    background-color: #2b2b2b;
+    color: #e0e0e0;
+}
+
+/* ---- Light-mode main menu ---- */
+QMainWindow#MainMenu {
+    background-color: #f5f6f8;
+    color: #222;
+}
+QWidget#MainMenuCentral { background-color: #f5f6f8; }
+QLabel#MenuTitle {
+    color: #2f7fe6;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+QLabel#MenuSubtitle {
+    color: #666;
+    font-size: 12px;
+}
+QPushButton#MenuAction {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #d6d9df;
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 13px;
+}
+QPushButton#MenuAction:hover {
+    background-color: #eaf2ff;
+    border-color: #2f7fe6;
+    color: #2f7fe6;
+}
+QPushButton#MenuAction:pressed {
+    background-color: #2f7fe6;
+    color: #ffffff;
+}
+QPushButton#MenuAction:disabled {
+    background-color: #f0f1f3;
+    color: #aaa;
+    border-color: #e2e4e8;
+}
+QPushButton#MenuSettings {
+    background-color: #ffffff;
+    color: #555;
+    border: 1px solid #d6d9df;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+}
+QPushButton#MenuSettings:hover {
+    background-color: #eef0f4;
+    color: #222;
+}
+
+/* ---- Light-mode editor window ---- */
+QMainWindow#EditorMain {
+    background-color: #f5f6f8;
+    color: #222;
+}
+QMainWindow#EditorMain QToolBar {
+    background-color: #eef0f4;
+    border: none;
+    border-bottom: 1px solid #d6d9df;
+    spacing: 4px;
+    padding: 4px;
+}
+QMainWindow#EditorMain QToolButton {
+    color: #333;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+QMainWindow#EditorMain QToolButton:hover {
+    background-color: #e0e6f3;
+    border: 1px solid #c0c8d4;
+}
+QMainWindow#EditorMain QToolButton:checked {
+    background-color: #2f7fe6;
+    border-color: #2f7fe6;
+    color: #ffffff;
+}
+QMainWindow#EditorMain QLabel { color: #333; }
+QMainWindow#EditorMain QStatusBar {
+    background-color: #eef0f4;
+    color: #555;
+    border-top: 1px solid #d6d9df;
+}
+QMainWindow#EditorMain QDockWidget {
+    color: #333;
+}
+QMainWindow#EditorMain QDockWidget::title {
+    background-color: #eef0f4;
+    color: #333;
+    padding: 4px;
+    border-bottom: 1px solid #d6d9df;
+}
+QMainWindow#EditorMain QListWidget {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #d6d9df;
+}
+QMainWindow#EditorMain QListWidget::item {
+    color: #222;
+    padding: 2px;
+}
+QMainWindow#EditorMain QListWidget::item:selected {
+    background-color: #2f7fe6;
+    color: #ffffff;
+}
+QMainWindow#EditorMain QLineEdit,
+QMainWindow#EditorMain QSpinBox,
+QMainWindow#EditorMain QComboBox,
+QMainWindow#EditorMain QFontComboBox {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #c7ccd3;
+    border-radius: 3px;
+    padding: 2px 4px;
+}
+QMainWindow#EditorMain QCheckBox { color: #333; }
+QMainWindow#EditorMain QPushButton {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #c7ccd3;
+    border-radius: 4px;
+    padding: 4px 10px;
+}
+QMainWindow#EditorMain QPushButton:hover {
+    background-color: #eaf2ff;
+    border-color: #2f7fe6;
+    color: #2f7fe6;
+}
+QMainWindow#EditorMain QPushButton:pressed {
+    background-color: #2f7fe6;
+    color: #ffffff;
+}
+QToolBar#OptionsBar {
+    background-color: #f0f2f5;
+    border: none;
+    border-top: 1px solid #d6d9df;
+    border-bottom: 1px solid #d6d9df;
+    padding: 3px 4px;
+    spacing: 4px;
+}
+QToolBar#OptionsBar QLabel { color: #444; font-size: 12px; }
+QToolBar#OptionsBar QComboBox,
+QToolBar#OptionsBar QFontComboBox,
+QToolBar#OptionsBar QSpinBox {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #c7ccd3;
+    border-radius: 3px;
+    padding: 2px 6px;
+    min-height: 22px;
+}
+QToolBar#OptionsBar QCheckBox { color: #333; }
+QToolBar#OptionsBar QPushButton {
+    background-color: #2f7fe6;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 12px;
+    font-weight: 600;
+}
+QToolBar#OptionsBar QPushButton:hover { background-color: #1a6fd4; }
+QToolBar#OptionsBar QPushButton:pressed { background-color: #1558af; }
+
+QPushButton {
+    background-color: #3c3f41;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 6px 14px;
+    min-height: 22px;
+}
+QPushButton:hover { background-color: #4a4d4f; }
+QPushButton:pressed { background-color: #2f7fe6; }
+QPushButton:disabled { color: #777; background-color: #333; }
+
+QToolBar {
+    background-color: #353535;
+    spacing: 4px;
+    border: none;
+    padding: 4px;
+}
+QToolButton {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 4px;
+}
+QToolButton:hover { background-color: #4a4d4f; border: 1px solid #666; }
+QToolButton:checked { background-color: #2f7fe6; border: 1px solid #2f7fe6; }
+
+QLabel { color: #e0e0e0; }
+
+QListWidget {
+    background-color: #252525;
+    color: #e0e0e0;
+    border: 1px solid #3a3a3a;
+}
+QListWidget::item:selected { background-color: #2f7fe6; }
+
+QStatusBar {
+    background-color: #222;
+    color: #bbb;
+}
+
+QLineEdit, QSpinBox, QComboBox {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    border-radius: 3px;
+    padding: 3px 5px;
+}
+
+QTabWidget::pane { border: 1px solid #444; }
+QTabBar::tab {
+    background: #3c3f41;
+    color: #ccc;
+    padding: 6px 12px;
+    border: 1px solid #444;
+}
+QTabBar::tab:selected { background: #2f7fe6; color: white; }
+
+QCheckBox { color: #e0e0e0; }
