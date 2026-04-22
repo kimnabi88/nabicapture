@@ -132,7 +132,7 @@ class AppController:
         )
         self._region_selector.region_selected.connect(self._on_region_selected)
         self._region_selector.cancelled.connect(self._on_capture_cancelled)
-        self._region_selector.showFullScreen()
+        self._region_selector.show()  # show() respects geometry; showFullScreen() locks to primary monitor
 
     def _on_region_selected(self, rect) -> None:
         try:
@@ -148,7 +148,7 @@ class AppController:
         self._window_picker = WindowPicker()
         self._window_picker.window_picked.connect(self._on_region_selected)
         self._window_picker.cancelled.connect(self._on_capture_cancelled)
-        self._window_picker.showFullScreen()
+        self._window_picker.show()
 
     def _start_fixed_size(self) -> None:
         dlg = SizeDialog(self.main_window)
@@ -159,10 +159,12 @@ class AppController:
         self._fixed_selector = FixedSizeSelector(w, h)
         self._fixed_selector.region_selected.connect(self._on_region_selected)
         self._fixed_selector.cancelled.connect(self._on_capture_cancelled)
-        self._fixed_selector.showFullScreen()
+        self._fixed_selector.show()
 
     def _on_capture_cancelled(self) -> None:
-        self._show_main()
+        # Stay hidden; user accesses via tray icon. Show main only if no tray.
+        if self.tray is None:
+            self._show_main()
 
     def _deliver_image(self, image: QImage) -> None:
         auto_copy = bool(self.config.get("capture", "copy_to_clipboard", True))

@@ -10,7 +10,7 @@ from src import __app_name__
 
 
 def magnifier_icon(size: int = 32) -> QIcon:
-    """Painter-drawn magnifying-glass icon (used for tray and app window)."""
+    """Fallback painter-drawn magnifying-glass icon."""
     pix = QPixmap(size, size)
     pix.fill(Qt.GlobalColor.transparent)
     s = size / 32.0
@@ -30,8 +30,17 @@ def magnifier_icon(size: int = 32) -> QIcon:
     return QIcon(pix)
 
 
-def _fallback_icon() -> QIcon:
+def load_app_icon() -> QIcon:
+    """Load icon.ico from resources if available, else programmatic fallback."""
+    from src.utils.paths import icons_dir
+    ico = icons_dir() / "icon.ico"
+    if ico.exists():
+        return QIcon(str(ico))
     return magnifier_icon(32)
+
+
+def _fallback_icon() -> QIcon:
+    return load_app_icon()
 
 
 class TrayIcon(QSystemTrayIcon):

@@ -1,6 +1,7 @@
 """Full-screen translucent overlay — drag to pick a rectangular region.
 
 Emits a screen_capture.Rect in physical-pixel coordinates.
+Uses Qt virtualGeometry so the overlay spans ALL monitors.
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtWidgets import QWidget
 
-from src.capture.screen_capture import Rect, virtual_screen
+from src.capture.screen_capture import Rect
 
 
 class RegionSelector(QWidget):
@@ -41,14 +42,11 @@ class RegionSelector(QWidget):
         self._start: QPoint | None = None
         self._end: QPoint | None = None
 
-        # Use logical geometry. We'll convert to physical px on emit.
-        self._virt = virtual_screen()
-        self._dpr = QGuiApplication.primaryScreen().devicePixelRatio() or 1.0
-        logical_w = int(self._virt.width / self._dpr)
-        logical_h = int(self._virt.height / self._dpr)
-        logical_left = int(self._virt.left / self._dpr)
-        logical_top = int(self._virt.top / self._dpr)
-        self.setGeometry(logical_left, logical_top, logical_w, logical_h)
+        # virtualGeometry covers all monitors in logical coordinates
+        virt = QGuiApplication.primaryScreen().virtualGeometry()
+        self.setGeometry(virt)
+        self._virt_left = virt.left()
+        self._virt_top = virt.top()
 
     # --- painting -------------------------------------------------------
     def paintEvent(self, _: QPaintEvent) -> None:  # noqa: N802
@@ -56,25 +54,22 @@ class RegionSelector(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
 
         full = self.rect()
-        shade = QColor(0, 0, 0, 110)
-        painter.fillRect(full, shade)
+        painter.fillRect(full, QColor(0, 0, 0, 110))
 
         rect = self._current_rect()
         if rect is not None and rect.isValid():
-            # punch hole: clear the selected area back to fully transparent
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_Clear)
             painter.fillRect(rect, Qt.GlobalColor.transparent)
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceOver)
 
-            # border
             pen = QPen(self._guideline, self._thickness)
             painter.setPen(pen)
             painter.drawRect(rect)
 
-            # size text
-            painter.setPen(Qt.GlobalColor.white)
-            phys_w = int(rect.width() * self._dpr)
-            phys_h = int(rect.height() * self._dpr)
+            # Size label in physical px using screen DPR at selection center
+            dpr = self._dpr_at(rect.center())
+            phys_w = int(rect.width() * dpr)
+            phys_h = int(rect.height() * dpr)
             label = f"{phys_w} × {phys_h} px"
             tx = rect.right() + 8
             ty = rect.bottom() + 18
@@ -82,6 +77,7 @@ class RegionSelector(QWidget):
                 tx = rect.right() - 140
             if ty + 4 > full.bottom():
                 ty = rect.top() - 6
+            painter.setPen(Qt.GlobalColor.white)
             painter.fillRect(tx - 4, ty - 14, 140, 20, QColor(0, 0, 0, 180))
             painter.drawText(tx, ty, label)
 
@@ -97,6 +93,15 @@ class RegionSelector(QWidget):
         if self._start is None or self._end is None:
             return None
         return QRect(self._start, self._end).normalized()
+
+    def _dpr_at(self, widget_pos: QPoint) -> float:
+        """Return the device pixel ratio of the screen under widget_pos."""
+        global_pos = QPoint(
+            widget_pos.x() + self._virt_left,
+            widget_pos.y() + self._virt_top,
+        )
+        screen = QGuiApplication.screenAt(global_pos) or QGuiApplication.primaryScreen()
+        return screen.devicePixelRatio() if screen else 1.0
 
     # --- input ----------------------------------------------------------
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
@@ -120,11 +125,16 @@ class RegionSelector(QWidget):
         if rect is None or rect.width() < 3 or rect.height() < 3:
             self.cancelled.emit()
             return
+
+        dpr = self._dpr_at(rect.center())
+        # Convert widget-local logical rect to global physical coords
+        global_left = rect.left() + self._virt_left
+        global_top = rect.top() + self._virt_top
         phys = Rect(
-            left=int(rect.left() * self._dpr) + self._virt.left,
-            top=int(rect.top() * self._dpr) + self._virt.top,
-            width=int(rect.width() * self._dpr),
-            height=int(rect.height() * self._dpr),
+            left=int(global_left * dpr),
+            top=int(global_top * dpr),
+            width=max(1, int(rect.width() * dpr)),
+            height=max(1, int(rect.height() * dpr)),
         )
         self.region_selected.emit(phys)
 

@@ -38,9 +38,9 @@ def icons_dir() -> Path:
     return resource_root() / "resources" / "icons"
 
 
-def captures_dir(relative: str) -> Path:
-    """Resolve save directory. Relative paths anchor to app_root()."""
-    p = Path(relative)
+def captures_dir(directory: str) -> Path:
+    """Resolve save directory. Supports ~, ~/Downloads, and relative paths."""
+    p = Path(directory).expanduser()
     if not p.is_absolute():
         p = app_root() / p
     p.mkdir(parents=True, exist_ok=True)

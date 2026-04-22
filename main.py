@@ -11,7 +11,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from src import __app_name__
 from src.app import AppController
 from src.core.config_manager import ConfigManager
-from src.ui.tray_icon import magnifier_icon
+from src.ui.tray_icon import load_app_icon
 from src.utils import logger, paths
 
 
@@ -48,7 +48,7 @@ def main() -> int:
     qt_app.setApplicationName(__app_name__)
     qt_app.setQuitOnLastWindowClosed(False)
     qt_app.setStyleSheet(_load_stylesheet())
-    qt_app.setWindowIcon(magnifier_icon(64))
+    qt_app.setWindowIcon(load_app_icon())
 
     controller = AppController(qt_app, config)
     return controller.start()
