@@ -1,7 +1,8 @@
 {
   "startup": {
     "run_on_boot": false,
-    "close_behavior": "minimize"
+    "close_behavior": "minimize",
+    "auto_update": true
   },
   "capture": {
     "copy_to_clipboard": true,

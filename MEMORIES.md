@@ -1,10 +1,16 @@
 # 기억해야 할 항목 — NabiCapture
 
-## 앱 런칭 플로우 (0.1.1 이후)
+## 앱 런칭 플로우 (0.1.4 이후)
 
-- `AppController.start()` 는 **MainWindow 를 먼저 show 하지 않음**. 대신 `QTimer.singleShot(100, ...)` 로 곧바로 region 캡쳐 오버레이를 띄움.
-- 사용자가 ESC 로 취소하면 `_on_capture_cancelled` → `_show_main()` 이 메뉴를 처음으로 노출.
-- **주의**: 이 순서를 바꾸면 "프로그램 켜자마자 바로 캡쳐" UX 가 깨짐. 메뉴부터 보고 싶으면 설정 플래그를 추가해 분기할 것.
+- `AppController.start()` 는 **트레이만 등록**하고 종료. 캡쳐는 단축키/트레이 메뉴로만 시작.
+- Windows 시작 앱 등록 시 캡쳐 오버레이가 뜨는 문제를 막기 위해 변경.
+- `start()` 에서 `auto_update` 설정이 켜져 있으면 3초 후 `_check_update()` 를 백그라운드로 호출.
+
+## ESC 동작 (0.1.4 이후)
+
+- 캡쳐 오버레이(RegionSelector / WindowPicker / FixedSizeSelector) 모두 `showEvent` 에서 `activateWindow()` + `grabKeyboard()` 호출.
+- `activateWindow()` 로 Qt 프로세스를 포그라운드로 올려야 키 입력이 Qt 이벤트 루프에 도달함. `grabKeyboard()` 만으로는 부족.
+- ESC 동작은 `capture.esc_behavior` 설정: `"tray"` (기본, 트레이 잔류) / `"quit"` (앱 종료).
 
 ## 메인 메뉴 라이트 테마 오버라이드
 

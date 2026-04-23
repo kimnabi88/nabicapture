@@ -16,6 +16,7 @@ from src.capture.window_capture import WindowPicker
 from src.core.config_manager import ConfigManager
 from src.core.history_manager import HistoryManager
 from src.core.hotkey_manager import HotkeyManager
+from src.core.update_checker import UpdateChecker
 from src.editor.editor_window import EditorWindow
 from src.ui.main_window import MainWindow
 from src.ui.tray_icon import TrayIcon
@@ -45,6 +46,7 @@ class AppController:
         self._window_picker: WindowPicker | None = None
         self._fixed_selector: FixedSizeSelector | None = None
         self._last_mode: str = "region"
+        self._updater = UpdateChecker()
 
         self._wire()
         self._apply_hotkeys()
@@ -190,6 +192,52 @@ class AppController:
         self.main_window.raise_()
         self.main_window.activateWindow()
 
+    # --- update --------------------------------------------------------
+    def _check_update(self) -> None:
+        self._updater.update_available.connect(self._on_update_available)
+        self._updater.check_async()
+
+    def _on_update_available(self, version: str, url: str) -> None:
+        log.info("update available: v%s", version)
+        if self.tray is not None:
+            self.tray.showMessage(
+                "NabiCapture 업데이트",
+                f"새 버전 v{version}이 있습니다. 클릭하여 업데이트하세요.",
+                self.tray.icon(),
+                8000,
+            )
+            self.tray.messageClicked.connect(lambda: self._start_download(version, url))
+        else:
+            self._prompt_update(version, url)
+
+    def _prompt_update(self, version: str, url: str) -> None:
+        res = QMessageBox.question(
+            None,
+            "업데이트 있음",
+            f"새 버전 v{version}이 있습니다.\n지금 다운로드하고 재시작하시겠습니까?",
+        )
+        if res == QMessageBox.StandardButton.Yes:
+            self._start_download(version, url)
+
+    def _start_download(self, version: str, url: str) -> None:
+        self._updater.download_done.connect(self._on_download_done)
+        self._updater.download_failed.connect(
+            lambda e: QMessageBox.warning(None, "다운로드 실패", e)
+        )
+        if self.tray is not None:
+            self.tray.showMessage("NabiCapture", f"v{version} 다운로드 중...", self.tray.icon(), 4000)
+        self._updater.download_async(url)
+
+    def _on_download_done(self, path: str) -> None:
+        res = QMessageBox.question(
+            None,
+            "다운로드 완료",
+            "다운로드가 완료됐습니다.\n지금 재시작하여 업데이트를 적용하시겠습니까?",
+        )
+        if res == QMessageBox.StandardButton.Yes:
+            UpdateChecker.apply_update(path)
+            self._quit()
+
     def _quit(self) -> None:
         self.hotkeys.clear()
         self.main_window.force_close()
@@ -198,6 +246,8 @@ class AppController:
         self.qt_app.quit()
 
     def start(self) -> int:
-        # Start directly in region-capture mode per UX spec; ESC brings up menu.
-        QTimer.singleShot(100, lambda: self.on_capture_requested("region"))
+        # Tray-only startup: hotkey or tray menu triggers capture.
+        # (Auto-starting capture on launch breaks Windows startup registration.)
+        if bool(self.config.get("startup", "auto_update", True)):
+            QTimer.singleShot(3000, self._check_update)
         return self.qt_app.exec()

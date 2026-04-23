@@ -118,6 +118,10 @@ class SettingsDialog(QDialog):
         self._run_on_boot = QCheckBox("Windows 시작 시 자동 실행")
         self._run_on_boot.setChecked(bool(self._config.get("startup", "run_on_boot", False)))
         form.addRow(self._run_on_boot)
+
+        self._auto_update = QCheckBox("자동 업데이트 확인 (시작 시 GitHub에서 새 버전 확인)")
+        self._auto_update.setChecked(bool(self._config.get("startup", "auto_update", True)))
+        form.addRow(self._auto_update)
         self._close_behavior = QComboBox()
         for val, label in CLOSE_OPTIONS:
             self._close_behavior.addItem(label, val)
@@ -272,6 +276,7 @@ class SettingsDialog(QDialog):
         self._config.update_section("startup", {
             "run_on_boot": self._run_on_boot.isChecked(),
             "close_behavior": self._close_behavior.currentData(),
+            "auto_update": self._auto_update.isChecked(),
         })
         self._config.update_section("capture", {
             "copy_to_clipboard": self._copy_to_cb.isChecked(),
