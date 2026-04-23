@@ -86,6 +86,7 @@ def _build_combo(combo: str) -> str:
 class SettingsDialog(QDialog):
     def __init__(self, config: ConfigManager, parent=None):
         super().__init__(parent)
+        self.setObjectName("SettingsDialog")
         self.setWindowTitle("환경설정")
         self.resize(560, 480)
         self._config = config

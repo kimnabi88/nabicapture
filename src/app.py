@@ -47,6 +47,7 @@ class AppController:
         self._fixed_selector: FixedSizeSelector | None = None
         self._last_mode: str = "region"
         self._updater = UpdateChecker()
+        self._settings_dlg: QDialog | None = None
 
         self._wire()
         self._apply_hotkeys()
@@ -95,8 +96,11 @@ class AppController:
         else:
             self._last_mode = mode
 
-        # Only wait for compositor if the window is actually visible.
-        # When already hidden (tray mode), fire immediately.
+        # Close settings dialog if open — modal loop blocks overlay focus/keyboard.
+        if self._settings_dlg is not None:
+            self._settings_dlg.reject()
+            self._settings_dlg = None
+
         was_visible = self.main_window.isVisible()
         self.main_window.hide()
         delay = 80 if was_visible else 0
@@ -184,8 +188,9 @@ class AppController:
     def on_settings_requested(self) -> None:
         from src.ui.settings_dialog import SettingsDialog  # local import avoids cycle
         parent = self.editor_window if self.editor_window.isVisible() else self.main_window
-        dlg = SettingsDialog(self.config, parent)
-        dlg.exec()
+        self._settings_dlg = SettingsDialog(self.config, parent)
+        self._settings_dlg.finished.connect(lambda _: setattr(self, "_settings_dlg", None))
+        self._settings_dlg.exec()
 
     def _show_main(self) -> None:
         self.main_window.showNormal()
