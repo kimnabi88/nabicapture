@@ -5,9 +5,39 @@ Kept deliberately thin: this is pure orchestration, not logic.
 
 from __future__ import annotations
 
+import sys
+
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QImage
 from PyQt6.QtWidgets import QApplication, QDialog, QMessageBox, QSystemTrayIcon
+
+try:
+    import winreg as _winreg
+    _HAS_WINREG = True
+except ImportError:
+    _HAS_WINREG = False
+
+_RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+_APP_REG_NAME = "NabiCapture"
+
+
+def _apply_run_on_boot(enable: bool) -> None:
+    """Write/delete HKCU Run key. Only works in frozen (exe) mode."""
+    if not _HAS_WINREG or not getattr(sys, "frozen", False):
+        return
+    try:
+        key = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, _RUN_KEY, 0, _winreg.KEY_SET_VALUE)
+        if enable:
+            _winreg.SetValueEx(key, _APP_REG_NAME, 0, _winreg.REG_SZ, f'"{sys.executable}"')
+        else:
+            try:
+                _winreg.DeleteValue(key, _APP_REG_NAME)
+            except FileNotFoundError:
+                pass
+        _winreg.CloseKey(key)
+    except Exception as exc:  # noqa: BLE001
+        from src.utils import logger
+        logger.get(__name__).warning("run_on_boot registry update failed: %s", exc)
 
 from src.capture import screen_capture
 from src.capture.fixed_size_capture import FixedSizeSelector, SizeDialog
@@ -68,6 +98,7 @@ class AppController:
         if self.tray is not None:
             self.tray.show_main_requested.connect(self._show_main)
             self.tray.capture_requested.connect(self.on_capture_requested)
+            self.tray.reconnect_hotkeys_requested.connect(self._apply_hotkeys)
             self.tray.quit_requested.connect(self._quit)
 
     def _apply_hotkeys(self) -> None:
@@ -81,6 +112,7 @@ class AppController:
             self.main_window.set_close_behavior(
                 self.config.get("startup", "close_behavior", "minimize"),
             )
+            _apply_run_on_boot(bool(self.config.get("startup", "run_on_boot", False)))
         if section in ("editor", "*"):
             self.history.set_max_items(
                 int(self.config.get("editor", "history_max_items", 50) or 50),

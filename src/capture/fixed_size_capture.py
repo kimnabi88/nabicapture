@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 )
 
 from src.capture.screen_capture import Rect
+from src.utils.winutils import grant_foreground
 
 
 class SizeDialog(QDialog):
@@ -89,10 +90,12 @@ class FixedSizeSelector(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.RightButton:
-            self.hide(); self.cancelled.emit(); return
+            self.releaseKeyboard(); self.hide(); self.cancelled.emit(); return
         if event.button() != Qt.MouseButton.LeftButton:
             return
         rect = self._logical_rect()
+        grant_foreground()
+        self.releaseKeyboard()
         self.hide()
         phys = Rect(
             left=int(rect.left() * self._dpr) + self.x(),
@@ -104,4 +107,4 @@ class FixedSizeSelector(QWidget):
 
     def keyPressEvent(self, event):  # noqa: N802, ANN001
         if event.key() == Qt.Key.Key_Escape:
-            self.hide(); self.cancelled.emit()
+            self.releaseKeyboard(); self.hide(); self.cancelled.emit()

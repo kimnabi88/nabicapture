@@ -46,6 +46,7 @@ def _fallback_icon() -> QIcon:
 class TrayIcon(QSystemTrayIcon):
     show_main_requested = pyqtSignal()
     capture_requested = pyqtSignal(str)
+    reconnect_hotkeys_requested = pyqtSignal()
     quit_requested = pyqtSignal()
 
     def __init__(self, icon: QIcon | None = None):
@@ -69,6 +70,10 @@ class TrayIcon(QSystemTrayIcon):
             menu.addAction(act)
 
         menu.addSeparator()
+
+        reconnect_act = QAction("단축키 재등록", menu)
+        reconnect_act.triggered.connect(self.reconnect_hotkeys_requested.emit)
+        menu.addAction(reconnect_act)
 
         quit_act = QAction("종료", menu)
         quit_act.triggered.connect(self.quit_requested.emit)

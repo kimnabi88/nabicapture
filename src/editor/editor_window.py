@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QTimer, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QImage, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QDockWidget,
@@ -196,6 +196,14 @@ class EditorWindow(QMainWindow):
         self.show()
         self.raise_()
         self.activateWindow()
+        # Retry: AllowSetForegroundWindow takes a moment to propagate on Windows,
+        # so activateWindow() sometimes needs a second attempt after event processing.
+        QTimer.singleShot(80, self._reactivate)
         if auto_copy:
             copy_image(image)
         return item
+
+    def _reactivate(self) -> None:
+        if self.isVisible():
+            self.raise_()
+            self.activateWindow()

@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QWidget
 
 from src.capture.screen_capture import Rect
 from src.utils import logger
+from src.utils.winutils import grant_foreground
 
 log = logger.get(__name__)
 
@@ -120,12 +121,12 @@ class WindowPicker(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.RightButton:
-            self.hide()
-            self.cancelled.emit()
-            return
+            self.releaseKeyboard(); self.hide(); self.cancelled.emit(); return
         if event.button() != Qt.MouseButton.LeftButton:
             return
         target = self._pick_at(event.globalPosition().toPoint())
+        grant_foreground()
+        self.releaseKeyboard()
         self.hide()
         if target is None:
             self.cancelled.emit()
@@ -134,5 +135,4 @@ class WindowPicker(QWidget):
 
     def keyPressEvent(self, event):  # noqa: N802, ANN001
         if event.key() == Qt.Key.Key_Escape:
-            self.hide()
-            self.cancelled.emit()
+            self.releaseKeyboard(); self.hide(); self.cancelled.emit()

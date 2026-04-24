@@ -20,6 +20,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import QWidget
 
 from src.capture.screen_capture import Rect
+from src.utils.winutils import grant_foreground
 
 
 class RegionSelector(QWidget):
@@ -128,6 +129,8 @@ class RegionSelector(QWidget):
             return
         self._end = event.pos()
         rect = self._current_rect()
+        grant_foreground()   # keep SetForegroundWindow right before hide
+        self.releaseKeyboard()
         self.hide()
         if rect is None or rect.width() < 3 or rect.height() < 3:
             self.cancelled.emit()
@@ -150,5 +153,6 @@ class RegionSelector(QWidget):
             self._cancel()
 
     def _cancel(self) -> None:
+        self.releaseKeyboard()
         self.hide()
         self.cancelled.emit()
