@@ -63,3 +63,48 @@ python main.py        # 실제 구동 (Windows 세션)
 - 트레이 아이콘이 PNG 없이 런타임에 그려지는 플레이스홀더 — 제대로 된 아이콘 파일 추가 필요
 - `use_printscreen` 설정은 `ctrl+shift+a` 같은 일반 바인딩과 함께 Region 액션에 중복 등록됨 — 실제로는 둘 다 동작하지만 UX 확인 필요
 - 창 캡쳐가 DWM 합성 윈도우(크롬 등)의 보이는 영역만 가져옴. 숨겨진 자식 윈도우 포함은 `PrintWindow` API로 해결 가능
+## Session Update - 2026-04-27
+
+- Switched local worktree from `master` to new local `main` tracking `origin/main`.
+- Fetched `https://github.com/kimnabi88/nabicapture.git` and confirmed `git pull --ff-only` is already up to date.
+- Current untracked local files after sync: `.claude/`, `AGENTS.md`, `PLAN.md`.
+
+### Next Step
+
+- Continue feature or fix work from `main...origin/main`.
+
+## Session Update - 2026-04-27 Hotkey/ESC Fix
+
+- Fixed global hotkey handle tracking so PrintScreen and normal hotkeys mapped to the same action are both removable.
+- Added hotkey refresh on capture finish/cancel plus a configurable periodic refresh interval.
+- Restored capture overlay focus/grab handling for region, window, and fixed-size modes so ESC works on first capture.
+- Changed default capture ESC behavior to `menu`; `tray` and `quit` remain supported internally.
+- Added `tests/test_hotkey_manager.py`; `pytest -v` passed with 20 tests.
+
+### Next Step
+
+- Run `python main.py` on Windows and manually verify: first-launch ESC cancels to menu, repeated hotkeys still work after several captures.
+
+## Session Update - 2026-04-27 Settings/Update Fix
+
+- Fixed critical modal settings bug: capture requests are ignored while `SettingsDialog` is open, and global hotkeys are cleared during the modal dialog then restored after close.
+- Added light-mode styling for `QDialog#SettingsDialog` and child controls.
+- Added startup config defaults for disabled automatic update check and GitHub latest-release URL.
+- Added settings UI controls for automatic update check, update check, and manual update.
+- Added `tests/test_app_controller_guards.py`; `python -m compileall src tests` and `pytest -v` passed with 22 tests.
+
+### Next Step
+
+- Run `python main.py` and manually verify settings-window hotkeys no longer darken/freeze the screen.
+
+## Session Update - 2026-04-27 Version 0.1.1 Release Prep
+
+- Bumped `src.__version__` to `0.1.1`.
+- Added GitHub Releases API update checker with numeric version comparison.
+- Wired automatic startup update checks when enabled and manual update checks from settings.
+- Manual update opens the configured latest-release URL.
+- Added `tests/test_update_checker.py`; `python -m compileall src tests` and `pytest -v` passed with 24 tests.
+
+### Next Step
+
+- Commit, push `main`, and create GitHub release `v0.1.1` once GitHub authentication is available.

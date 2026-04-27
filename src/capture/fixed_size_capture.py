@@ -2,8 +2,17 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QCursor, QGuiApplication, QMouseEvent, QPainter, QPen
+from PyQt6.QtCore import QPoint, QRect, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import (
+    QColor,
+    QCursor,
+    QGuiApplication,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPen,
+    QShowEvent,
+)
 from PyQt6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -49,6 +58,7 @@ class FixedSizeSelector(QWidget):
             | Qt.WindowType.Tool,
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setCursor(Qt.CursorShape.BlankCursor)
         self.setMouseTracking(True)
 
@@ -59,7 +69,17 @@ class FixedSizeSelector(QWidget):
         self.setGeometry(virt)
         self._cursor = QCursor.pos() - self.pos()
 
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
+        """Force keyboard focus onto the overlay when it appears."""
+        super().showEvent(event)
+        self.raise_()
+        self.activateWindow()
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+        self.grabKeyboard()
+        QTimer.singleShot(0, self._refocus)
+
     def _logical_rect(self) -> QRect:
+        """Return the current fixed capture rectangle in logical pixels."""
         lw = int(self._w / self._dpr)
         lh = int(self._h / self._dpr)
         return QRect(self._cursor.x() - lw // 2, self._cursor.y() - lh // 2, lw, lh)
@@ -84,10 +104,12 @@ class FixedSizeSelector(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.RightButton:
-            self.hide(); self.cancelled.emit(); return
+            self._cancel()
+            return
         if event.button() != Qt.MouseButton.LeftButton:
             return
         rect = self._logical_rect()
+        self.releaseKeyboard()
         self.hide()
         phys = Rect(
             left=int(rect.left() * self._dpr) + self.x(),
@@ -97,6 +119,19 @@ class FixedSizeSelector(QWidget):
         )
         self.region_selected.emit(phys)
 
-    def keyPressEvent(self, event):  # noqa: N802, ANN001
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
         if event.key() == Qt.Key.Key_Escape:
-            self.hide(); self.cancelled.emit()
+            self._cancel()
+
+    def _cancel(self) -> None:
+        """Hide the overlay and notify capture cancellation."""
+        self.releaseKeyboard()
+        self.hide()
+        self.cancelled.emit()
+
+    def _refocus(self) -> None:
+        """Retry focus after the window manager finishes showing the overlay."""
+        if not self.isVisible():
+            return
+        self.activateWindow()
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)

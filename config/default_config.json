@@ -1,7 +1,10 @@
 {
   "startup": {
     "run_on_boot": false,
-    "close_behavior": "minimize"
+    "close_behavior": "minimize",
+    "auto_update_check": false,
+    "update_url": "https://github.com/kimnabi88/nabicapture/releases/latest",
+    "update_api_url": "https://api.github.com/repos/kimnabi88/nabicapture/releases/latest"
   },
   "capture": {
     "copy_to_clipboard": true,
@@ -9,6 +12,8 @@
     "guideline_thickness": 1,
     "use_printscreen": true,
     "printscreen_action": "region",
+    "esc_behavior": "menu",
+    "hotkey_refresh_ms": 30000,
     "show_magnifier": true
   },
   "save": {

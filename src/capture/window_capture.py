@@ -4,8 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QCursor, QGuiApplication, QMouseEvent, QPainter, QPen
+from PyQt6.QtCore import QPoint, QRect, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import (
+    QColor,
+    QCursor,
+    QGuiApplication,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPen,
+    QShowEvent,
+)
 from PyQt6.QtWidgets import QWidget
 
 from src.capture.screen_capture import Rect
@@ -66,6 +75,7 @@ class WindowPicker(QWidget):
             | Qt.WindowType.Tool,
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMouseTracking(True)
 
@@ -74,6 +84,15 @@ class WindowPicker(QWidget):
         self.setGeometry(virt)
         self._windows = list_windows()
         self._hovered: WindowEntry | None = None
+
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
+        """Force keyboard focus onto the overlay when it appears."""
+        super().showEvent(event)
+        self.raise_()
+        self.activateWindow()
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+        self.grabKeyboard()
+        QTimer.singleShot(0, self._refocus)
 
     # --- painting ------------------------------------------------------
     def paintEvent(self, _):  # noqa: N802, ANN001
@@ -115,19 +134,31 @@ class WindowPicker(QWidget):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.RightButton:
-            self.hide()
-            self.cancelled.emit()
+            self._cancel()
             return
         if event.button() != Qt.MouseButton.LeftButton:
             return
         target = self._pick_at(event.globalPosition().toPoint())
+        self.releaseKeyboard()
         self.hide()
         if target is None:
             self.cancelled.emit()
             return
         self.window_picked.emit(target.rect)
 
-    def keyPressEvent(self, event):  # noqa: N802, ANN001
+    def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
         if event.key() == Qt.Key.Key_Escape:
-            self.hide()
-            self.cancelled.emit()
+            self._cancel()
+
+    def _cancel(self) -> None:
+        """Hide the overlay and notify capture cancellation."""
+        self.releaseKeyboard()
+        self.hide()
+        self.cancelled.emit()
+
+    def _refocus(self) -> None:
+        """Retry focus after the window manager finishes showing the overlay."""
+        if not self.isVisible():
+            return
+        self.activateWindow()
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)

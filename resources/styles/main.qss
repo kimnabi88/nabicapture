@@ -5,6 +5,72 @@ QMainWindow, QDialog {
     color: #e0e0e0;
 }
 
+/* ---- Light-mode settings dialog ---- */
+QDialog#SettingsDialog {
+    background-color: #f5f6f8;
+    color: #222;
+}
+QDialog#SettingsDialog QWidget {
+    background-color: #f5f6f8;
+    color: #222;
+}
+QDialog#SettingsDialog QGroupBox {
+    border: 1px solid #d6d9df;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding: 10px 8px 8px 8px;
+    color: #333;
+}
+QDialog#SettingsDialog QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 8px;
+    padding: 0 4px;
+    color: #333;
+}
+QDialog#SettingsDialog QLabel,
+QDialog#SettingsDialog QCheckBox {
+    color: #333;
+}
+QDialog#SettingsDialog QLineEdit,
+QDialog#SettingsDialog QSpinBox,
+QDialog#SettingsDialog QComboBox {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #c7ccd3;
+    border-radius: 3px;
+    padding: 3px 6px;
+}
+QDialog#SettingsDialog QPushButton {
+    background-color: #ffffff;
+    color: #222;
+    border: 1px solid #c7ccd3;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+QDialog#SettingsDialog QPushButton:hover {
+    background-color: #eaf2ff;
+    border-color: #2f7fe6;
+    color: #2f7fe6;
+}
+QDialog#SettingsDialog QPushButton:pressed {
+    background-color: #2f7fe6;
+    color: #ffffff;
+}
+QDialog#SettingsDialog QTabWidget::pane {
+    border: 1px solid #d6d9df;
+    background-color: #f5f6f8;
+}
+QDialog#SettingsDialog QTabBar::tab {
+    background: #eef0f4;
+    color: #333;
+    padding: 6px 12px;
+    border: 1px solid #d6d9df;
+}
+QDialog#SettingsDialog QTabBar::tab:selected {
+    background: #ffffff;
+    color: #2f7fe6;
+}
+
 /* ---- Light-mode main menu ---- */
 QMainWindow#MainMenu {
     background-color: #f5f6f8;

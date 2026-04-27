@@ -6,7 +6,7 @@ Uses Qt virtualGeometry so the overlay spans ALL monitors.
 
 from __future__ import annotations
 
-from PyQt6.QtCore import QPoint, QRect, Qt, pyqtSignal
+from PyQt6.QtCore import QPoint, QRect, Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import (
     QColor,
     QCursor,
@@ -16,6 +16,7 @@ from PyQt6.QtGui import (
     QPaintEvent,
     QPainter,
     QPen,
+    QShowEvent,
 )
 from PyQt6.QtWidgets import QWidget
 
@@ -34,6 +35,7 @@ class RegionSelector(QWidget):
             | Qt.WindowType.Tool,
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setCursor(Qt.CursorShape.CrossCursor)
         self.setMouseTracking(True)
 
@@ -47,6 +49,15 @@ class RegionSelector(QWidget):
         self.setGeometry(virt)
         self._virt_left = virt.left()
         self._virt_top = virt.top()
+
+    def showEvent(self, event: QShowEvent) -> None:  # noqa: N802
+        """Force keyboard focus onto the overlay when it appears."""
+        super().showEvent(event)
+        self.raise_()
+        self.activateWindow()
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)
+        self.grabKeyboard()
+        QTimer.singleShot(0, self._refocus)
 
     # --- painting -------------------------------------------------------
     def paintEvent(self, _: QPaintEvent) -> None:  # noqa: N802
@@ -121,6 +132,7 @@ class RegionSelector(QWidget):
             return
         self._end = event.pos()
         rect = self._current_rect()
+        self.releaseKeyboard()
         self.hide()
         if rect is None or rect.width() < 3 or rect.height() < 3:
             self.cancelled.emit()
@@ -143,5 +155,13 @@ class RegionSelector(QWidget):
             self._cancel()
 
     def _cancel(self) -> None:
+        self.releaseKeyboard()
         self.hide()
         self.cancelled.emit()
+
+    def _refocus(self) -> None:
+        """Retry focus after the window manager finishes showing the overlay."""
+        if not self.isVisible():
+            return
+        self.activateWindow()
+        self.setFocus(Qt.FocusReason.ActiveWindowFocusReason)

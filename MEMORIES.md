@@ -97,3 +97,31 @@
 ## keyboard 라이브러리 권한
 
 - Windows에서 PrintScreen 후킹/억제는 **관리자 권한이 없으면 실패**할 수 있음 → `HotkeyManager._register`에서 예외 잡고 `error` 시그널로 전달. 설정 UI에서 안내 예정.
+## Session Note - 2026-04-27
+
+- User requested GitHub `main` as the working baseline.
+- `origin/main` exists and is now tracked by local `main`; `origin/master` remains separate at commit `101d1df`.
+- Do not delete untracked `.claude/`, `AGENTS.md`, or `PLAN.md` unless the user explicitly asks.
+
+## Hotkey/ESC Stability - 2026-04-27
+
+- Root cause found: `HotkeyManager._register(..., override=True)` leaked the PrintScreen handle when it used the same action key as an existing hotkey, so later `clear()` could not remove every OS hook.
+- `HotkeyManager` now stores a list of handles per action and `refresh()` re-applies the last bindings.
+- Capture overlays must keep `StrongFocus`, call `activateWindow()`, `setFocus()`, and `grabKeyboard()` in `showEvent()`, then `releaseKeyboard()` before cancel/selection.
+- `capture.esc_behavior` defaults to `menu`; use `tray` only when ESC should hide the app after cancel.
+- `capture.hotkey_refresh_ms` controls periodic global hotkey re-registration; set to `0` to disable.
+
+## Settings Modal Capture Freeze - 2026-04-27
+
+- Root cause: `SettingsDialog.exec()` starts a modal event loop, but global hotkeys remained registered and could start a capture overlay while the dialog still owned modality/focus.
+- Fix rule: while `_settings_open` is true, `AppController` must stop the hotkey refresh timer, clear global hotkeys, and reject `on_capture_requested()` without creating any overlay.
+- After settings closes, call `_apply_hotkeys()` once to restore the current config bindings.
+- Settings dialog uses object name `SettingsDialog`; light theme rules should be scoped as `QDialog#SettingsDialog ...`.
+- Auto-update default is disabled via `startup.auto_update_check = false`; update buttons currently open GitHub pages without adding a dependency.
+
+## Update Flow - 2026-04-27
+
+- Current app version source is `src/__init__.py::__version__`.
+- Update checks use `startup.update_api_url` to call GitHub Releases API and compare latest `tag_name` to current version.
+- Automatic updates are opt-in via `startup.auto_update_check`; the app prompts and opens the release page instead of replacing the running executable.
+- Manual update opens `startup.update_url`, expected to point to the latest release page.

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QDesktopServices
 from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -15,6 +16,7 @@ from PyQt6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QMessageBox,
     QPushButton,
     QSpinBox,
     QTabWidget,
@@ -22,7 +24,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
+from src import __version__
 from src.core.config_manager import ConfigManager
+from src.core.update_checker import check_latest_release
 
 CLOSE_OPTIONS = [("minimize", "최소화 (트레이로 이동)"), ("quit", "종료")]
 FORMAT_OPTIONS = ["png", "jpg", "webp", "bmp"]
@@ -85,6 +89,7 @@ def _build_combo(combo: str) -> str:
 class SettingsDialog(QDialog):
     def __init__(self, config: ConfigManager, parent=None):
         super().__init__(parent)
+        self.setObjectName("SettingsDialog")
         self.setWindowTitle("환경설정")
         self.resize(560, 480)
         self._config = config
@@ -117,6 +122,18 @@ class SettingsDialog(QDialog):
         self._run_on_boot = QCheckBox("Windows 시작 시 자동 실행")
         self._run_on_boot.setChecked(bool(self._config.get("startup", "run_on_boot", False)))
         form.addRow(self._run_on_boot)
+        self._auto_update_check = QCheckBox("실행 시 자동 업데이트 확인")
+        self._auto_update_check.setChecked(bool(self._config.get("startup", "auto_update_check", False)))
+        form.addRow(self._auto_update_check)
+        update_row = QHBoxLayout()
+        check_btn = QPushButton("업데이트 확인")
+        manual_btn = QPushButton("수동 업데이트")
+        check_btn.clicked.connect(self._check_updates)
+        manual_btn.clicked.connect(self._manual_update)
+        update_row.addWidget(check_btn)
+        update_row.addWidget(manual_btn)
+        update_row.addStretch()
+        form.addRow(update_row)
         self._close_behavior = QComboBox()
         for val, label in CLOSE_OPTIONS:
             self._close_behavior.addItem(label, val)
@@ -260,10 +277,41 @@ class SettingsDialog(QDialog):
         if path:
             self._save_dir.setText(path)
 
+    def _check_updates(self) -> None:
+        """Check GitHub releases and open the latest release when available."""
+        api_url = str(self._config.get("startup", "update_api_url", "") or "")
+        if not api_url:
+            QMessageBox.information(self, "업데이트", "업데이트 확인 경로가 설정되지 않았습니다.")
+            return
+        try:
+            info = check_latest_release(api_url, __version__)
+        except RuntimeError as exc:
+            QMessageBox.warning(self, "업데이트", f"업데이트 확인에 실패했습니다.\n{exc}")
+            return
+        if not info.is_update_available:
+            QMessageBox.information(self, "업데이트", "현재 최신 버전입니다.")
+            return
+        answer = QMessageBox.question(
+            self,
+            "업데이트",
+            f"NabiCapture {info.latest_version} 버전이 있습니다.\n릴리즈 페이지를 여시겠습니까?",
+        )
+        if answer == QMessageBox.StandardButton.Yes and info.release_url:
+            QDesktopServices.openUrl(QUrl(info.release_url))
+
+    def _manual_update(self) -> None:
+        """Open the configured GitHub release page for manual update."""
+        url = str(self._config.get("startup", "update_url", "") or "")
+        if not url:
+            QMessageBox.information(self, "업데이트", "수동 업데이트 경로가 설정되지 않았습니다.")
+            return
+        QDesktopServices.openUrl(QUrl(url))
+
     def _accept(self) -> None:
         self._config.update_section("startup", {
             "run_on_boot": self._run_on_boot.isChecked(),
             "close_behavior": self._close_behavior.currentData(),
+            "auto_update_check": self._auto_update_check.isChecked(),
         })
         self._config.update_section("capture", {
             "copy_to_clipboard": self._copy_to_cb.isChecked(),
