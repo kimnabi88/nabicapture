@@ -125,3 +125,4 @@
 - Update checks use `startup.update_api_url` to call GitHub Releases API and compare latest `tag_name` to current version.
 - Automatic updates are opt-in via `startup.auto_update_check`; the app prompts and opens the release page instead of replacing the running executable.
 - Manual update opens `startup.update_url`, expected to point to the latest release page.
+- Do not exclude stdlib `email` in `build.spec`; `urllib.request` imports it at runtime inside the packaged exe.

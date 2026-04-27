@@ -108,3 +108,10 @@ python main.py        # 실제 구동 (Windows 세션)
 ### Next Step
 
 - Commit, push `main`, and create GitHub release `v0.1.1` once GitHub authentication is available.
+
+## Session Update - 2026-04-27 Version 0.1.2 Packaging Fix
+
+- Fixed packaged exe startup crash by keeping Python stdlib `email` available for `urllib.request`.
+- Bumped app version to `0.1.2` because `v0.1.1` tag was already pushed before the packaging fix.
+- Rebuilt `dist/NabiCapture.exe` and verified it stays running past startup import.
+- `pytest -v` passed with 24 tests.

@@ -26,7 +26,7 @@ _STDLIB_EXCLUDE = [
     'unittest', 'doctest', 'pdb', 'profile', 'pstats', 'timeit', 'trace',
     'lib2to3', 'distutils', 'ensurepip', 'venv',
     'xml.etree', 'xmlrpc', 'html', 'http.server',
-    'email', 'mailbox', 'mimetypes', 'multiprocessing',
+    'mailbox', 'mimetypes', 'multiprocessing',
     'curses', 'readline', 'rlcompleter',
 ]
 
