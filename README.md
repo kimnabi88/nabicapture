@@ -1,4 +1,4 @@
-# ProfectF
+# Nabicapture
 
 가벼운 PC용 화면 캡쳐 + 편집 프로그램. ShareX/Greenshot 류 기능, 광고 없음, 포터블.
 
