@@ -121,5 +121,5 @@ python main.py        # 실제 구동 (Windows 세션)
 - Replaced the primary Windows global hotkey path with a native `RegisterHotKey` backend.
 - Kept the existing `keyboard` package backend as fallback only.
 - Added support verification for combo strings such as `print screen` and `ctrl+shift+c`.
-- Bumped app version to `0.1.3`.
+- Bumped app version to `0.1.4` because `v0.1.3` already exists as an older release tag.
 - `python -m compileall src tests` and `pytest -v` passed with 25 tests.
