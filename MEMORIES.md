@@ -126,3 +126,10 @@
 - Automatic updates are opt-in via `startup.auto_update_check`; the app prompts and opens the release page instead of replacing the running executable.
 - Manual update opens `startup.update_url`, expected to point to the latest release page.
 - Do not exclude stdlib `email` in `build.spec`; `urllib.request` imports it at runtime inside the packaged exe.
+
+## Native Hotkeys - 2026-04-28
+
+- Intermittent hotkey failure can happen when the `keyboard` package hook thread silently stops while the Qt app/tray remains alive.
+- Primary hotkey backend is now Win32 `RegisterHotKey`; the message-loop thread must register the hotkey itself because `RegisterHotKey(NULL, ...)` posts `WM_HOTKEY` to the registering thread.
+- Keep `keyboard` only as fallback when native registration fails or is unavailable.
+- `print screen`, `ctrl+shift+c`, and `ctrl+shift+a` must keep parsing through `_parse_combo()`.
