@@ -1,8 +1,8 @@
-"""Main window — single-row capture bar, settings button, light theme."""
+"""Main capture menu window opened from the tray."""
 
 from __future__ import annotations
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import (
     QHBoxLayout,
@@ -13,35 +13,37 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src import __app_name__
+from src import __app_name__, __version__
 
 CAPTURE_ACTIONS = [
-    ("region", "직접지정", "드래그로 사각 영역 캡쳐"),
-    ("window", "창", "창 클릭으로 선택 캡쳐"),
-    ("monitor", "단위영역", "모니터 단위 캡쳐"),
-    ("fullscreen", "전체화면", "모든 모니터 캡쳐"),
-    ("fixed_size", "크기지정", "W×H 지정 후 위치 이동으로 캡쳐"),
-    ("scroll", "스크롤", "(2단계 예정)"),
+    ("region", "Region", "Drag to capture a rectangular area"),
+    ("window", "Window", "Pick a window to capture"),
+    ("monitor", "Monitor", "Capture one monitor"),
+    ("fullscreen", "Full", "Capture all monitors"),
+    ("fixed_size", "Fixed", "Capture a fixed-size area"),
+    ("scroll", "Scroll", "Planned"),
 ]
 
 
 class MainWindow(QMainWindow):
-    capture_requested = pyqtSignal(str)     # capture mode id
+    capture_requested = pyqtSignal(str)
     settings_requested = pyqtSignal()
-    close_intent = pyqtSignal()             # true close (tray may intercept X)
+    close_intent = pyqtSignal()
 
     def __init__(self, close_behavior: str = "minimize"):
         super().__init__()
         self._close_behavior = close_behavior
-        self.setWindowTitle(__app_name__)
+        self.setWindowTitle(f"{__app_name__} v{__version__}")
         self.setObjectName("MainMenu")
         self.setFixedSize(760, 128)
         self._build_ui()
 
     def set_close_behavior(self, behavior: str) -> None:
+        """Set whether the close button hides or exits the app."""
         self._close_behavior = behavior
 
     def _build_ui(self) -> None:
+        """Build the capture menu and settings button."""
         central = QWidget()
         central.setObjectName("MainMenuCentral")
         self.setCentralWidget(central)
@@ -50,17 +52,18 @@ class MainWindow(QMainWindow):
         root.setSpacing(8)
 
         header = QHBoxLayout()
-        title = QLabel(f"{__app_name__}")
+        title = QLabel(__app_name__)
         title.setObjectName("MenuTitle")
-        subtitle = QLabel("가벼운 화면 캡쳐")
+        subtitle = QLabel("Screen capture")
         subtitle.setObjectName("MenuSubtitle")
         header.addWidget(title)
         header.addSpacing(8)
         header.addWidget(subtitle)
         header.addStretch(1)
-        settings_btn = QPushButton("설정")
+
+        settings_btn = QPushButton("Settings")
         settings_btn.setObjectName("MenuSettings")
-        settings_btn.setFixedWidth(68)
+        settings_btn.setFixedWidth(78)
         settings_btn.clicked.connect(self.settings_requested.emit)
         header.addWidget(settings_btn)
         root.addLayout(header)
@@ -78,8 +81,8 @@ class MainWindow(QMainWindow):
             row.addWidget(btn, 1)
         root.addLayout(row)
 
-    # X click routing
-    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802 (Qt naming)
+    def closeEvent(self, event: QCloseEvent) -> None:  # noqa: N802
+        """Route X button to tray hide or real quit."""
         if self._close_behavior == "minimize":
             event.ignore()
             self.hide()
@@ -88,5 +91,6 @@ class MainWindow(QMainWindow):
             event.accept()
 
     def force_close(self) -> None:
+        """Force a real close during application quit."""
         self._close_behavior = "quit"
         self.close()

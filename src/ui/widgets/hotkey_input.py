@@ -32,6 +32,9 @@ _KEY_NAMES = {
     Qt.Key.Key_Right: "right",
     Qt.Key.Key_Up: "up",
     Qt.Key.Key_Down: "down",
+    Qt.Key.Key_Plus: "+",
+    Qt.Key.Key_Minus: "-",
+    Qt.Key.Key_Equal: "=",
 }
 
 

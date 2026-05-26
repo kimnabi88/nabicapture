@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QActionGroup, QKeySequence
-from PyQt6.QtWidgets import QSizePolicy, QToolBar, QWidget
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QSlider, QToolBar, QWidget
 
 TOOL_BUTTONS = [
     ("pen", "펜"),
@@ -28,6 +28,11 @@ class EditorToolbar(QToolBar):
     save_requested = pyqtSignal()
     copy_requested = pyqtSignal()
     settings_requested = pyqtSignal()
+    zoom_in_requested = pyqtSignal()
+    zoom_out_requested = pyqtSignal()
+    zoom_actual_requested = pyqtSignal()
+    zoom_fit_requested = pyqtSignal()
+    zoom_percent_requested = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
@@ -68,6 +73,42 @@ class EditorToolbar(QToolBar):
         save.triggered.connect(self.save_requested.emit)
         self.addAction(save)
 
+        self.addSeparator()
+
+        zoom_out = QAction("-", self)
+        zoom_out.setToolTip("Zoom out")
+        zoom_out.triggered.connect(self.zoom_out_requested.emit)
+        self.addAction(zoom_out)
+
+        self._zoom_slider = QSlider(Qt.Orientation.Horizontal)
+        self._zoom_slider.setRange(10, 400)
+        self._zoom_slider.setSingleStep(5)
+        self._zoom_slider.setPageStep(25)
+        self._zoom_slider.setFixedWidth(140)
+        self._zoom_slider.setValue(100)
+        self._zoom_slider.valueChanged.connect(self.zoom_percent_requested.emit)
+        self.addWidget(self._zoom_slider)
+
+        zoom_in = QAction("+", self)
+        zoom_in.setToolTip("Zoom in")
+        zoom_in.triggered.connect(self.zoom_in_requested.emit)
+        self.addAction(zoom_in)
+
+        actual = QAction("100%", self)
+        actual.setToolTip("Actual size")
+        actual.triggered.connect(self.zoom_actual_requested.emit)
+        self.addAction(actual)
+
+        fit = QAction("Fit", self)
+        fit.setToolTip("Fit image to window")
+        fit.triggered.connect(self.zoom_fit_requested.emit)
+        self.addAction(fit)
+
+        self._zoom_label = QLabel("100%")
+        self._zoom_label.setMinimumWidth(44)
+        self._zoom_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.addWidget(self._zoom_label)
+
         # Push settings button to the far right
         spacer = QWidget()
         spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
@@ -82,3 +123,11 @@ class EditorToolbar(QToolBar):
         if act is not None:
             act.setChecked(True)
             self.tool_selected.emit(tool_id)
+
+    def set_zoom_percent(self, percent: int) -> None:
+        """Reflect the current canvas zoom without re-emitting slider changes."""
+        value = max(10, min(400, int(percent)))
+        self._zoom_slider.blockSignals(True)
+        self._zoom_slider.setValue(value)
+        self._zoom_slider.blockSignals(False)
+        self._zoom_label.setText(f"{value}%")

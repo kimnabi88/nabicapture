@@ -24,9 +24,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src import __version__
+from src import __app_name__, __version__
 from src.core.config_manager import ConfigManager
 from src.core.update_checker import check_latest_release
+from src.ui.widgets.hotkey_input import HotkeyInput
 
 CLOSE_OPTIONS = [("minimize", "최소화 (트레이로 이동)"), ("quit", "종료")]
 FORMAT_OPTIONS = ["png", "jpg", "webp", "bmp"]
@@ -38,6 +39,13 @@ HOTKEY_LABELS = [
     ("fullscreen", "전체캡처"),
     ("fixed_size", "크기지정"),
     ("last_repeat","마지막 반복"),
+]
+
+EDITOR_SHORTCUT_LABELS = [
+    ("zoom_in", "Zoom in"),
+    ("zoom_out", "Zoom out"),
+    ("zoom_actual", "100%"),
+    ("zoom_fit", "Fit"),
 ]
 
 PS_ACTIONS = [
@@ -90,7 +98,7 @@ class SettingsDialog(QDialog):
     def __init__(self, config: ConfigManager, parent=None):
         super().__init__(parent)
         self.setObjectName("SettingsDialog")
-        self.setWindowTitle("환경설정")
+        self.setWindowTitle(f"{__app_name__} v{__version__} - Settings")
         self.resize(560, 480)
         self._config = config
 
@@ -122,6 +130,8 @@ class SettingsDialog(QDialog):
         self._run_on_boot = QCheckBox("Windows 시작 시 자동 실행")
         self._run_on_boot.setChecked(bool(self._config.get("startup", "run_on_boot", False)))
         form.addRow(self._run_on_boot)
+        version_label = QLabel(f"NabiCapture {__version__}")
+        form.addRow("Version", version_label)
         self._auto_update_check = QCheckBox("실행 시 자동 업데이트 확인")
         self._auto_update_check.setChecked(bool(self._config.get("startup", "auto_update_check", False)))
         form.addRow(self._auto_update_check)
@@ -241,6 +251,17 @@ class SettingsDialog(QDialog):
         grid.setColumnStretch(6, 1)
         hk_inner.addLayout(grid)
         root.addWidget(hk_group)
+
+        editor_group = QGroupBox("Editor zoom shortcuts")
+        editor_form = QFormLayout(editor_group)
+        self._editor_hk_rows: dict[str, HotkeyInput] = {}
+        for key, label in EDITOR_SHORTCUT_LABELS:
+            cur = str(self._config.get("editor_shortcuts", key, "") or "")
+            inp = HotkeyInput(cur)
+            editor_form.addRow(label, inp)
+            self._editor_hk_rows[key] = inp
+        root.addWidget(editor_group)
+
         root.addStretch()
         return w
 
@@ -342,6 +363,10 @@ class SettingsDialog(QDialog):
                 parts.append(k)
             hotkeys[key] = "+".join(parts)
         self._config.update_section("hotkeys", hotkeys)
+        self._config.update_section(
+            "editor_shortcuts",
+            {key: inp.value() for key, inp in self._editor_hk_rows.items()},
+        )
         self._config.save()
         self.accept()
 

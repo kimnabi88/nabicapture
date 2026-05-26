@@ -123,3 +123,25 @@ python main.py        # 실제 구동 (Windows 세션)
 - Added support verification for combo strings such as `print screen` and `ctrl+shift+c`.
 - Bumped app version to `0.1.7` because `v0.1.3` through `v0.1.6` already exist as older release tags.
 - `python -m compileall src tests` and `pytest -v` passed with 25 tests.
+
+## Session Update - 2026-05-26 Editor Zoom Controls
+
+- Added editor result zoom controls: zoom out, slider, zoom in, 100%, and fit-to-window.
+- Added canvas zoom APIs with bounded percent updates and toolbar/status synchronization.
+- Added configurable editor zoom shortcuts under `editor_shortcuts`.
+- Default zoom shortcuts are `ctrl++`, `ctrl+-`, `ctrl+1`, and `ctrl+0`.
+- `python -m compileall src tests`, `pytest -v`, `git diff --check`, and an offscreen editor zoom smoke test passed.
+
+## Session Update - 2026-05-26 Tray Startup
+
+- Removed startup auto-capture from `AppController.start()`.
+- Set `QApplication.setQuitOnLastWindowClosed(False)` so the app can stay resident in the tray.
+- Kept the main capture menu available from tray Open while global hotkeys still capture immediately from tray residency.
+
+## Session Update - 2026-05-26 Version Metadata
+
+- Added PyInstaller Windows version resource metadata via `version_info.txt`.
+- Wired `build.spec` to embed the version metadata in `NabiCapture.exe`.
+- Added the current app version to the settings dialog.
+- Added the current app version to main, editor, and settings window titles.
+- Bumped app/release version to `0.1.8` for the zoom, tray-startup, and version metadata release.

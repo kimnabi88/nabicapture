@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 
+from src import __app_name__, __version__
 from src.core.clipboard_manager import copy_image
 from src.core.config_manager import ConfigManager
 from src.core.history_manager import CaptureItem, HistoryManager
@@ -33,10 +34,11 @@ class EditorWindow(QMainWindow):
         super().__init__()
         self._config = config
         self._history = history
+        self._shortcuts: list[QShortcut] = []
 
         editor_cfg = config.get("editor")
         self.setObjectName("EditorMain")
-        self.setWindowTitle("NabiCapture Editor")
+        self.setWindowTitle(f"{__app_name__} v{__version__} - Editor")
         self.resize(1280, 800)
 
         self._canvas = Canvas()
@@ -74,6 +76,11 @@ class EditorWindow(QMainWindow):
         self._toolbar.save_requested.connect(self.save_current)
         self._toolbar.copy_requested.connect(self.copy_current)
         self._toolbar.settings_requested.connect(self.settings_requested.emit)
+        self._toolbar.zoom_in_requested.connect(self._canvas.zoom_in)
+        self._toolbar.zoom_out_requested.connect(self._canvas.zoom_out)
+        self._toolbar.zoom_actual_requested.connect(self._canvas.zoom_actual)
+        self._toolbar.zoom_fit_requested.connect(self._canvas.zoom_fit)
+        self._toolbar.zoom_percent_requested.connect(self._canvas.set_zoom_percent)
 
         # Options bar: per-tool parameter changes
         self._options.color_changed.connect(self._on_color)
@@ -85,6 +92,8 @@ class EditorWindow(QMainWindow):
         self._options.text_commit_requested.connect(self._on_text_commit)
 
         self._canvas.base_changed.connect(self._status.set_size)
+        self._canvas.zoom_changed.connect(self._toolbar.set_zoom_percent)
+        self._canvas.zoom_changed.connect(self._status.set_zoom)
 
         self._panel.item_activated.connect(self._on_panel_activated)
         self._panel.item_deleted.connect(self._on_panel_deleted)
@@ -96,6 +105,29 @@ class EditorWindow(QMainWindow):
 
         esc_sc = QShortcut(QKeySequence("Esc"), self)
         esc_sc.activated.connect(self._on_escape)
+        self.reload_shortcuts()
+
+    def reload_shortcuts(self) -> None:
+        """Rebuild editor-local shortcuts from current configuration."""
+        for shortcut in self._shortcuts:
+            shortcut.setEnabled(False)
+            shortcut.setParent(None)
+            shortcut.deleteLater()
+        self._shortcuts.clear()
+        bindings = self._config.get("editor_shortcuts") or {}
+        actions = {
+            "zoom_in": self._canvas.zoom_in,
+            "zoom_out": self._canvas.zoom_out,
+            "zoom_actual": self._canvas.zoom_actual,
+            "zoom_fit": self._canvas.zoom_fit,
+        }
+        for key, slot in actions.items():
+            combo = str(bindings.get(key, "") or "")
+            if not combo:
+                continue
+            shortcut = QShortcut(QKeySequence(combo), self)
+            shortcut.activated.connect(slot)
+            self._shortcuts.append(shortcut)
 
     # --- tool configuration --------------------------------------------
     def _on_tool_selected(self, tool_id: str) -> None:

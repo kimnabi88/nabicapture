@@ -30,6 +30,12 @@
     "fixed_size": "ctrl+shift+x",
     "last_repeat": "ctrl+shift+r"
   },
+  "editor_shortcuts": {
+    "zoom_in": "ctrl++",
+    "zoom_out": "ctrl+-",
+    "zoom_actual": "ctrl+1",
+    "zoom_fit": "ctrl+0"
+  },
   "editor": {
     "colors": [
       "#000000", "#FFFFFF", "#FF1744", "#00C853",

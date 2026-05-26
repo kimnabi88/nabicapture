@@ -133,3 +133,22 @@
 - Primary hotkey backend is now Win32 `RegisterHotKey`; the message-loop thread must register the hotkey itself because `RegisterHotKey(NULL, ...)` posts `WM_HOTKEY` to the registering thread.
 - Keep `keyboard` only as fallback when native registration fails or is unavailable.
 - `print screen`, `ctrl+shift+c`, and `ctrl+shift+a` must keep parsing through `_parse_combo()`.
+
+## Editor Zoom - 2026-05-26
+
+- Editor zoom shortcuts are local `QShortcut`s, not global `HotkeyManager` bindings.
+- Store them in `editor_shortcuts` so capture hotkeys and editor commands do not share the same config section.
+- `Canvas.zoom_fit()` uses `fitInView()` and then emits the current zoom so toolbar slider and status bar stay synchronized.
+- `HotkeyInput` must keep `+`, `-`, and `=` key names because zoom shortcuts need plus/minus entry.
+
+## Tray Startup - 2026-05-26
+
+- Do not start capture from `AppController.start()`; startup-program registration must only create the tray resident app.
+- Keep `setQuitOnLastWindowClosed(False)` enabled because the tray icon is the primary resident surface.
+- Tray Open should show the main capture menu. Do not remove the main capture buttons.
+- Global hotkeys must work while the app is only resident in the tray.
+
+## Version Metadata - 2026-05-26
+
+- `src.__version__`, `version_info.txt`, and GitHub release tags must be kept in sync before release builds.
+- PyInstaller embeds Windows exe Properties version data from `version_info.txt`.

@@ -31,6 +31,7 @@ class AppController:
 
     def __init__(self, qt_app: QApplication, config: ConfigManager):
         self.qt_app = qt_app
+        self.qt_app.setQuitOnLastWindowClosed(False)
         self.config = config
 
         history_max = int(config.get("editor", "history_max_items", 50) or 50)
@@ -71,7 +72,6 @@ class AppController:
 
         if self.tray is not None:
             self.tray.show_main_requested.connect(self._show_main)
-            self.tray.capture_requested.connect(self.on_capture_requested)
             self.tray.quit_requested.connect(self._quit)
 
     def _apply_hotkeys(self) -> None:
@@ -108,6 +108,8 @@ class AppController:
             self.history.set_max_items(
                 int(self.config.get("editor", "history_max_items", 50) or 50),
             )
+        if section in ("editor_shortcuts", "*"):
+            self.editor_window.reload_shortcuts()
         if section in ("hotkeys", "capture", "*"):
             self._apply_hotkeys()
 
@@ -284,6 +286,7 @@ class AppController:
         self.qt_app.quit()
 
     def start(self) -> int:
-        # Start directly in region-capture mode per UX spec; ESC brings up menu.
-        QTimer.singleShot(100, lambda: self.on_capture_requested("region"))
+        # Start as a tray resident app; capture starts only through global hotkeys.
+        if self.tray is None:
+            QTimer.singleShot(100, self._show_main)
         return self.qt_app.exec()

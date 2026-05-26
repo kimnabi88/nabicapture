@@ -18,6 +18,7 @@ class Canvas(QGraphicsView):
     """One image = one Canvas. Tools mutate the scene through the active tool."""
 
     base_changed = pyqtSignal(int, int)   # width, height after replace
+    zoom_changed = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
@@ -35,6 +36,8 @@ class Canvas(QGraphicsView):
         self._base_item: QGraphicsPixmapItem | None = None
         self._active_tool: BaseTool = NoopTool(self)
         self.undo_stack = new_stack()
+        self._min_zoom = 10
+        self._max_zoom = 400
 
     # --- image ----------------------------------------------------------
     def set_image(self, image: QImage) -> None:
@@ -45,6 +48,7 @@ class Canvas(QGraphicsView):
         self._scene.addItem(self._base_item)
         self._scene.setSceneRect(QRectF(0, 0, pix.width(), pix.height()))
         self.resetTransform()
+        self._emit_zoom()
         self.base_changed.emit(pix.width(), pix.height())
 
     def base_pixmap(self) -> QPixmap | None:
@@ -58,6 +62,7 @@ class Canvas(QGraphicsView):
         else:
             self._base_item.setPixmap(pix)
         self._scene.setSceneRect(QRectF(0, 0, pix.width(), pix.height()))
+        self._emit_zoom()
         self.base_changed.emit(pix.width(), pix.height())
 
     def render_flat(self) -> QImage:
@@ -91,6 +96,47 @@ class Canvas(QGraphicsView):
     def scene_ref(self) -> QGraphicsScene:
         return self._scene
 
+    # --- zoom -----------------------------------------------------------
+    def zoom_percent(self) -> int:
+        """Return the current view scale as a percentage."""
+        return max(self._min_zoom, min(self._max_zoom, round(self.transform().m11() * 100)))
+
+    def set_zoom_percent(self, percent: int) -> None:
+        """Set an absolute zoom percentage within the supported range."""
+        if self._base_item is None:
+            return
+        target = max(self._min_zoom, min(self._max_zoom, int(percent)))
+        current = self.transform().m11() or 1.0
+        factor = (target / 100.0) / current
+        self.scale(factor, factor)
+        self._emit_zoom()
+
+    def zoom_in(self) -> None:
+        """Increase zoom by one step."""
+        self.set_zoom_percent(round(self.zoom_percent() * 1.15))
+
+    def zoom_out(self) -> None:
+        """Decrease zoom by one step."""
+        self.set_zoom_percent(round(self.zoom_percent() / 1.15))
+
+    def zoom_actual(self) -> None:
+        """Return the image to actual 100% size."""
+        self.set_zoom_percent(100)
+
+    def zoom_fit(self) -> None:
+        """Scale the full image to fit inside the viewport."""
+        if self._base_item is None:
+            return
+        rect = self._scene.sceneRect()
+        if rect.isNull() or rect.isEmpty():
+            return
+        self.fitInView(rect, Qt.AspectRatioMode.KeepAspectRatio)
+        self._emit_zoom()
+
+    def _emit_zoom(self) -> None:
+        """Notify listeners of the current bounded zoom percentage."""
+        self.zoom_changed.emit(self.zoom_percent())
+
     # --- mouse routing --------------------------------------------------
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
         if event.button() == Qt.MouseButton.LeftButton:
@@ -108,8 +154,10 @@ class Canvas(QGraphicsView):
 
     def wheelEvent(self, event):  # noqa: N802, ANN001
         if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
-            factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
-            self.scale(factor, factor)
+            if event.angleDelta().y() > 0:
+                self.zoom_in()
+            else:
+                self.zoom_out()
             event.accept()
             return
         super().wheelEvent(event)
